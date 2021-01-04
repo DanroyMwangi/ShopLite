@@ -1,0 +1,238 @@
+from flask import *
+from form import RegisterForm, LoginForm, Sell_form
+import pymysql
+import os
+
+connection = pymysql.connect('localhost', 'danro', 'sithlord', 'shoplite')
+cursor = connection.cursor()
+app = Flask('__name__')
+app.secret_key = '1233456'
+app.config['UPLOAD_FOLDER'] = 'static/media/uploads'
+
+
+@app.route('/')
+@app.route('/home')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/register', methods=('POST', 'GET'))
+def register():
+    reg_form = RegisterForm()
+    if request.method == "POST" and reg_form.validate_on_submit():
+        username = reg_form.username.data
+        email = reg_form.email.data
+        password = reg_form.password.data
+        mobile = reg_form.mobile.data
+        location = reg_form.location.data
+        query = f"INSERT INTO `register`(`username`, `email`, `password`, `number`, `location`) VALUES ('{username}','{email}','{password}','{mobile}','{location}')"
+        cursor.execute(query)
+        connection.commit()
+        query_2 = f"SELECT  `email` FROM `register` WHERE email='{email}'"
+        cursor.execute(query_2)
+        result = cursor.rowcount
+        if result == 1:
+            flash(f'Welcome {username}', 'success')
+            return redirect(url_for('register', title='Register', form=reg_form))
+        else:
+            flash(f'Invalid Registration', 'danger')
+            return redirect(url_for('register', title='Register', form=reg_form))
+    else:
+        return render_template('register.html', title='Register', form=reg_form)
+
+
+@app.before_request
+def before_request():
+    g.username = None
+    if 'username' in session:
+        g.username = session['username']
+
+
+@app.route('/login', methods=('POST', 'GET'))
+def login():
+    logForm = LoginForm()
+    session.pop('username', None)
+    if request.method == "POST" and logForm.validate_on_submit():
+        email = logForm.email.data
+        password = logForm.password.data
+        remember_me = logForm.remember_me.data
+        query = f"SELECT `email`, `password` FROM `register` WHERE email='{email}' AND password='{password}'"
+        cursor.execute(query)
+        connection.commit()
+        results = cursor.rowcount
+        query_3 = f"SELECT  `username` FROM `register` WHERE email='{email}' AND password='{password}'"
+        cursor.execute(query_3)
+        if results == 1:
+            username = cursor.fetchall()[0][0]
+            if remember_me is True:
+                session['username'] = username
+                session.permanent = True
+                query_fetch_quantity = f"SELECT sum(`quantity`) FROM `goods_purchased` where username='{session['username']}'"
+                cursor.execute(query_fetch_quantity)
+                connection.commit()
+                quantity_tot = cursor.fetchall()
+                if quantity_tot is None:
+                    session['total_quantity'] = 0
+                else:
+                    session['total_quantity'] = quantity_tot[0][0]
+                return redirect(url_for('index', form=logForm))
+            else:
+                session['username'] = username
+                session.permanent = False
+                query_fetch_quantity = f"SELECT sum(`quantity`) FROM `goods_purchased` where username='{session['username']}'"
+                cursor.execute(query_fetch_quantity)
+                connection.commit()
+                quantity_tot = cursor.fetchall()
+                if quantity_tot is None:
+                    session['total_quantity'] = 0
+                else:
+                    session['total_quantity'] = quantity_tot[0][0]
+                return redirect(url_for('index', form=logForm))
+        else:
+            flash('Invalid Account Details. Try again', 'danger')
+            return redirect(url_for('login', title='Login', form=logForm))
+    else:
+        return render_template('login.html', title='Login', form=logForm)
+
+
+@app.route('/logout')
+def logout():
+    session.pop('total_quantity', None)
+    session.pop('absolute_total', None)
+    session.pop('username', None)
+    return redirect(url_for('index'))
+
+
+@app.route('/products/buy', methods=['POST', 'GET'])
+def buy():
+    query = "SELECT * FROM products_in_stock"
+    cursor.execute(query)
+    connection.commit()
+    products = cursor.fetchall()
+    return render_template('buy.html', title='Products', products=products)
+
+
+@app.route('/add', methods=['POST', 'GET'])
+def add():
+    quantity = int(request.form['quantity'])
+    code = request.form['code']
+    pdname = request.form['pdname']
+    price = float(request.form['price'])
+    if quantity is not None and code is not None and request.method == "POST":
+        if quantity > 0:
+            total_price_item = quantity * price
+            query_if_code_exists = f"SELECT `quantity` FROM `goods_purchased` where username='{session['username']}' AND code='{code}'"
+            cursor.execute(query_if_code_exists)
+            connection.commit()
+            rows_code = cursor.rowcount
+            if rows_code >= 1:
+                query_update = f"UPDATE `goods_purchased` SET `quantity`= `quantity` + '{quantity}',`total_price`=`total_price` + '{total_price_item}' WHERE username='{session['username']}' AND code='{code}' "
+                cursor.execute(query_update)
+                connection.commit()
+                return redirect(url_for('buy'))
+            else:
+                query = f"INSERT INTO `goods_purchased`(`name`,`code`,`quantity`,`price`,`total_price`,`username`) VALUES ('{pdname}','{code}','{quantity}','{price}','{total_price_item}','{session['username']}')"
+                cursor.execute(query)
+                connection.commit()
+                query_fetch_username = f"SELECT `username` FROM `goods_purchased` where username='{session['username']}'"
+                cursor.execute(query_fetch_username)
+                connection.commit()
+                username = cursor.fetchone()[0]
+                if session['username'] == username:
+                    username_in_use = session['username']
+                    query_fetch_quantity = f"SELECT sum(`quantity`) FROM `goods_purchased` where username='{username_in_use}'"
+                    cursor.execute(query_fetch_quantity)
+                    connection.commit()
+                    quantity_tot = int(cursor.fetchall()[0][0])
+                    session['total_quantity'] = quantity_tot
+                    query_fetch_price = f"SELECT sum(`total_price`) FROM `goods_purchased` where username='{username_in_use}'"
+                    cursor.execute(query_fetch_price)
+                    connection.commit()
+                    price_tot = cursor.fetchall()[0][0]
+                    session['absolute_total'] = price_tot
+                    return redirect(url_for('buy'))
+                else:
+                    return redirect(url_for('buy'))
+    else:
+        flash('Invalid quantity', 'danger')
+    return redirect(url_for('login'))
+
+
+@app.route('/cart', methods=['POST', 'GET'])
+def cart():
+    query = f"Select * from `goods_purchased`"
+    cursor.execute(query)
+    connection.commit()
+    rows = cursor.rowcount
+    if rows > 1:
+        items = cursor.fetchall()
+        if request.method == 'POST':
+            code = request.form.get('code')
+            price = float(request.form['itemprice'])
+            quantity = int(request.form['itemquantity'])
+            total_price_item = price * quantity
+            query_subtract = f"UPDATE `goods_purchased` SET `quantity`= `quantity` - '{quantity}',`total_price`=`total_price` - '{total_price_item}' WHERE username='{session['username']}' AND code='{code}' "
+            cursor.execute(query_subtract)
+            connection.commit()
+            query_delete = f"DELETE FROM `goods_purchased` WHERE `total_price` <= '0' OR `quantity` <= '0'"
+            cursor.execute(query_delete)
+            connection.commit()
+            query_fetch_quantity = f"SELECT sum(`quantity`) FROM `goods_purchased` where username='{session['username']}'"
+            cursor.execute(query_fetch_quantity)
+            connection.commit()
+            quantity_tot = cursor.fetchall()[0][0]
+            if quantity_tot is None:
+                session['total_quantity'] = 0
+            else:
+                session['total_quantity'] = quantity_tot
+            query_fetch_price = f"SELECT sum(`total_price`) FROM `goods_purchased` where username='{session['username']}'"
+            cursor.execute(query_fetch_price)
+            connection.commit()
+            price_tot = cursor.fetchall()[0][0]
+            session['absolute_total'] = price_tot
+            return redirect(url_for('cart', items=items))
+        else:
+            return render_template('cart.html', items=items)
+    else:
+        flash('No items in cart', 'secondary')
+        return render_template('cart.html', title="Cart")
+
+
+@app.route('/products/sell', methods=['POST', 'GET'])
+def sell():
+    sell_form = Sell_form()
+    name = sell_form.name.data
+    price = sell_form.price.data
+    code = sell_form.code.data
+    image = sell_form.image.data
+    details = sell_form.details.data
+    if image and name and price and code and sell_form.validate_on_submit() and 'username' in session:
+        username = session['username']
+        filename = image.filename
+        query3 = f"SELECT `code` FROM `products_in_stock` WHERE code='{code}'"
+        cursor.execute(query3)
+        connection.commit()
+        results1 = cursor.rowcount
+        if results1 == 1:
+            flash('Duplicate Code. Try again', category='danger')
+        else:
+            image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            query = f"INSERT INTO `products_in_stock`(`name`,`code`,`price`,`image`,`username`,`details`) VALUES ('{name}','{code}','{price}','{filename}','{username}','{details}')"
+            cursor.execute(query)
+            connection.commit()
+            query2 = f"SELECT `code` FROM `products_in_stock` WHERE code='{code}'"
+            cursor.execute(query2)
+            connection.commit()
+            results = cursor.rowcount
+            if results == 1:
+                flash('Product added', category='success')
+            else:
+                flash('Invalid entry.', category='danger')
+
+        return render_template('sell.html', title='Products', form=sell_form)
+    else:
+        return render_template('sell.html', title='Products', form=sell_form)
+
+
+if app.name == '__name__':
+    app.run(debug=True, port=8000)

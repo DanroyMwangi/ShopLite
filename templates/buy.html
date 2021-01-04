@@ -1,0 +1,46 @@
+{%  extends "layout.html"  %}
+
+{% block content %}
+<h2 class="Jumbotron text-center">Products</h2>
+<hr>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category,message in messages %}
+                    <div class="alert alert-{{category}}">{{message}}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+<section class="row">
+    {% for product in products %}
+    <div class="col-md-2">
+        <div class="card">
+				<div class="card-body">
+                    <img src="../static/media/uploads/{{ product[3] }}" width="100%" class="img-fluid img-thumbnail text-center">
+                    <b class="card-title"><u>{{ product[0] }}</u></b>
+                    <small><p>{{ product[5] }}
+                    </p></small>
+                    <form action="/add" method="POST">
+                        <input type="hidden" name="pdname" value="{{ product[0] }}">
+                        <input type="hidden" name="code" value="{{product[1]}}">
+                        <small><span>Seller:<b>{{product[4]}}</b></span></small><br>
+                        <small><span>Mobile:<b>{{product[6]}}</b></span></small><br>
+                        <span>Price:<b>Ksh.{{ product[2] }}</b></span>
+                        <input type="hidden" name="mobile" value="{{ product[6] }}">
+                        <input type="number" name="quantity" required class="form-control" placeholder="Quantity" min="0" max="20" size="4">
+                        <input type="hidden" name="price" value="{{ product[2] }}">
+                        <br>
+                        <button class="btn btn-primary mr-auto" type="submit">Buy</button>
+                    </form>
+                    <br>
+                    <form action="/report" method="POST">
+                        <input type="hidden" name="code" value="{{product[1]}}">
+                        <input type="hidden" name="username" value="{{product[4]}}">
+                        <button class="btn btn-danger ml-auto" type="submit">Report</button>
+                    </form>
+                </div>
+        </div>
+    </div>
+     {% endfor %}
+</section>
+
+{% endblock content %}

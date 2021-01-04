@@ -1,0 +1,141 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<section class="row">
+    <div class="col-md-12">
+        <div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{category}}">{{message}}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+        <form action="#" method="POST" class="form" enctype="multipart/form-data">
+                {{form.hidden_tag() }}
+        <table class="table">
+            <thead>
+                <tr>
+                        <th>Name</th>
+                        <th>Input Required</th>
+                </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>
+                    {{ form.name.label(class='form-label') }}
+                </td>
+                <td>
+                    <div class="form-group">
+                    {% if form.name.error %}
+                        {{ form.name(class='form-control is-invalid')}}
+                            {% for error in form.name.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{error}}</span>
+                                </div>
+                            {% endfor %}
+                    {% endif %}
+                    {{ form.name(class='form-control-sm')}}
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{ form.image.label(class='form-label') }}
+                </td>
+                <td>
+                    <div class="form-group">
+                                {% if form.image.error %}
+                                    {{ form.image(class='form-control is-invalid')}}
+                                        {% for error in form.image.errors %}
+                                            <div class="invalid-feedback">
+                                                <span>{{error}}</span>
+                                            </div>
+                                        {% endfor %}
+                                {% endif %}
+                            {{ form.image(class='form-control-sm')}}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{ form.price.label(class='form-label') }}
+                </td>
+                <td>
+                    <div class="form-group">
+                    {% if form.price.error %}
+                        {{ form.price(class='form-control is-invalid')}}
+                            {% for error in form.price.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{error}}</span>
+                                </div>
+                            {% endfor %}
+                    {% endif %}
+                    {{ form.price(class='form-control-sm')}}
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{ form.details.label(class='form-label') }}
+                </td>
+                <td>
+                    <div class="form-group">
+                    {% if form.details.error %}
+                        {{ form.details(class='form-control is-invalid')}}
+                            {% for error in form.details.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{error}}</span>
+                                </div>
+                            {% endfor %}
+                    {% endif %}
+                    {{ form.details(class='form-control-sm')}}
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{ form.mobile.label(class='form-label') }}
+                </td>
+                <td>
+                    <div class="form-group">
+                    {% if form.mobile.error %}
+                        {{ form.mobile(class='form-control is-invalid')}}
+                            {% for error in form.mobile.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{error}}</span>
+                                </div>
+                            {% endfor %}
+                    {% endif %}
+                    {{ form.mobile(class='form-control-sm')}}
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{ form.code.label(class='form-label') }}
+                </td>
+                <td>
+                    <div class="form-group">
+                    {% if form.code.error %}
+                        {{ form.code(class='form-control is-invalid')}}
+                            {% for error in form.code.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{error}}</span>
+                                </div>
+                            {% endfor %}
+                    {% endif %}
+                    {{ form.code(class='form-control-sm')}}
+                </div>
+                </td>
+            </tr>
+          </tbody>
+        </table>
+            {{ form.submit(class='btn btn-success') }}
+        </form>
+
+    </div>
+</section>
+{% endblock content %}

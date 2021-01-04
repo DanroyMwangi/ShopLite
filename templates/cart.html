@@ -1,0 +1,66 @@
+{%  extends "layout.html"  %}
+
+{% block content %}
+
+<form action="#" method="POST">
+    <input type="hidden" name="code" value="{{session['code']}}">
+</form>
+<section>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category,message in messages %}
+                    <div class="alert alert-{{category}} text-center">{{message}}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    <table class="table">
+        <thead>
+            <tr>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Seller Mobile No.</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total Price</th>
+                    <th>Remove Product</th>
+            </tr>
+        </thead>
+        <tbody>
+      {% for item in items %}
+      {% if session['username'] == item[5] %}
+        <tr>
+            <td>{{ item[0] }}</td>
+            <td>{{ item[1] }}</td>
+            <td>{{ item[6] }}</td>
+            <td>{{ item[3] }}</td>
+            <td>{{ item[2] }}</td>
+            <td>{{ item[4] }}</td>
+            <td>
+                <form action="#" method="POST">
+                    <input type="hidden" name="code" value="{{ item[1] }}">
+                    <input type="hidden" name="itemprice" value="{{ item[3] }}">
+                    <input type="number" required name="itemquantity" placeholder="Quantity" min="0" max="20" size="6">
+                    <button class="btn btn-danger">
+                        <svg width="2em" height="2em" viewBox="0 0 16 16" class="bi bi-x" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                        </svg>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>Total:</td>
+            <td>{{ session['total_quantity'] }}</td>
+            <td>{{ session['absolute_total'] }}</td>
+            <td></td>
+        </tr>
+      </tbody>
+    </table>
+</section>
+
+{% endblock content %}

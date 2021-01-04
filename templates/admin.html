@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- CSS only -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <!-- JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+    <title>Admin</title>
+</head>
+<body>
+    <h2 class="text-center">Members</h2>
+    <table class="table table-light">
+      <thead>
+        <tr>
+          <th scope="col">Username</th>
+          <th scope="col">Email</th>
+          <th scope="col">Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for member in members %}
+        <tr>
+            <td>{{member[0]}}</td>
+            <td>{{member[1]}}</td>
+            <td>
+                <form action="#" method="POST">
+                    <input type="hidden" name="email" value="{{member[1]}}">
+                    <button class="btn btn-danger" type="submit">Delete account</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <hr>
+    <h2 class="text-center">Products</h2>
+    <table class="table table-light">
+      <thead>
+        <tr>
+            <th scope="col">Product Name</th>
+            <th scope="col">Product Code</th>
+            <th scope="col">Product Image</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+            <tr>
+                <td>{{product[0]}}</td>
+                <td>{{product[1]}}</td>
+                <td>
+                    <img src="../static/media/uploads/{{ product[3] }}" width="10%" class="img-fluid img-thumbnail" alt="">
+                </td>
+                <td>
+                    <form action="/admin_product" method="POST">
+                        <input type="hidden" name="code" value="{{product[1]}}">
+                        <button class="btn btn-danger" type="submit">Delete Product</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <hr>
+    <h2 class="text-center">Reports</h2>
+    <table class="table table-light">
+      <thead>
+        <tr>
+            <th scope="col">Reporter Name</th>
+            <th scope="col">Reported Username</th>
+            <th scope="col">Reported Email</th>
+            <th scope="col">Reported Number</th>
+            <th scope="col">Reported Product Code</th>
+        </tr>
+      </thead>
+      <tbody>
+            {% for report in reports %}
+                <tr>
+                    <td>{{report[0]}}</td>
+                    <td>{{report[1]}}</td>
+                    <td>{{report[2]}}</td>
+                    <td>{{report[3]}}</td>
+                    <td>{{report[4]}}</td>
+                </tr>
+            {% endfor %}
+      </tbody>
+    </table>
+</body>
+</html>
